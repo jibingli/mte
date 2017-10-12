@@ -32,7 +32,7 @@ class Config(object):
     _logging_level = logging.DEBUG
     _logging_file_path = MTE_ROOT
     _logging_formatter = "%(asctime)s %(levelname)s %(filename)s:%(lineno)d | %(message)s"
-    logging_file = os.path.join(_logging_file_path, "AXUI" + datetime.datetime.now().strftime("%Y%m%d%H%M%S") + '.log')
+    _logging_file = os.path.join(_logging_file_path, "MTE_" + datetime.datetime.now().strftime("%Y%m%d%H%M%S") + '.log')
 
     def __str__(self):
         return ""
@@ -79,6 +79,8 @@ class Config(object):
     @logging_file_path.setter
     def logging_file_path(self, input):
         self._logging_file_path = str(input)
+        self._logging_file = os.path.join(self._logging_file_path,
+                                          "MTE_" + datetime.datetime.now().strftime("%Y%m%d%H%M%S") + '.log')
         config_logger()
 
     @property
@@ -89,6 +91,10 @@ class Config(object):
     def logging_formatter(self, input):
         self._logging_formatter = str(input)
         config_logger()
+
+    @property
+    def logging_file(self):
+        return self._logging_file
 
 
 logger_config = Config()
