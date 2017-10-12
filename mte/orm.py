@@ -4,7 +4,7 @@ import requests
 from nose.tools import assert_equal
 import json
 import sys
-from mte.finallogger import logger
+from logger import logger
 
 reload(sys)
 sys.setdefaultencoding('utf8')

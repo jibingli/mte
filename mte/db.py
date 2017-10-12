@@ -4,7 +4,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.sql import func
 import time, uuid, functools, threading
-from finallogger import logger
+from logger import logger
 
 
 def next_id(t=None):
