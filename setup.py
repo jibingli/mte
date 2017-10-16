@@ -14,7 +14,7 @@ setup(
     packages=['mte'],  # 需要打包的目录列表
     # 需要安装的依赖
     install_requires=[
-        'nose', 'requests','sqlalchemy'
+        'nose', 'requests', 'sqlalchemy', 'requests_ntlm'
     ],
     zip_safe=False
 )

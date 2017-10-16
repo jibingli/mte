@@ -6,8 +6,11 @@ import os
 import random
 from datetime import date
 from datetime import timedelta
-
+import string
+import hashlib
+import codecs
 from logger import logger
+import hmac
 
 ARR = [7, 9, 10, 5, 8, 4, 2, 1, 6, 3, 7, 9, 10, 5, 8, 4, 2]
 LAST = ('1', '0', 'x', '9', '8', '7', '6', '5', '4', '3', '2')
@@ -112,3 +115,24 @@ def string_to_dict(self, s):
 
 def dict_to_string(self, d):
     return json.dumps(d)
+
+
+def gen_random_string(str_len):
+    return ''.join(
+        random.choice(string.ascii_letters + string.digits) for _ in range(str_len))
+
+
+def gen_md5(*str_args):
+    return hashlib.md5("".join(str_args).encode('utf-8')).hexdigest()
+
+
+def load_json_file(json_file):
+    with codecs.open(json_file, encoding='utf-8') as data_file:
+        return json.load(data_file)
+
+
+def get_sign(secret_key, *args):
+    content = ''.join(args).encode('ascii')
+    sign_key = secret_key.encode('ascii')
+    sign = hmac.new(sign_key, content, hashlib.sha1).hexdigest()
+    return sign

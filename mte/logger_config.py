@@ -13,7 +13,7 @@ def config_logger():
     logger.handlers = []
 
     # 文件保存日志
-    file_handler = logging.FileHandler(logger_config.logging_file, mode="w")
+    file_handler = logging.FileHandler(logger_config.logging_file_path, mode="w")
     file_handler.setLevel(logger_config.logging_level)
     formatter = logging.Formatter(logger_config.logging_formatter)
     file_handler.setFormatter(formatter)
@@ -30,9 +30,8 @@ def config_logger():
 class Config(object):
     _logger_name = "MTE"
     _logging_level = logging.DEBUG
-    _logging_file_path = MTE_ROOT
     _logging_formatter = "%(asctime)s %(levelname)s %(filename)s:%(lineno)d | %(message)s"
-    _logging_file = os.path.join(_logging_file_path, "MTE_" + datetime.datetime.now().strftime("%Y%m%d%H%M%S") + '.log')
+    _logging_file_path = os.path.join(MTE_ROOT, "MTE_" + datetime.datetime.now().strftime("%Y%m%d%H%M%S") + '.log')
 
     def __str__(self):
         return ""
@@ -79,8 +78,6 @@ class Config(object):
     @logging_file_path.setter
     def logging_file_path(self, input):
         self._logging_file_path = str(input)
-        self._logging_file = os.path.join(self._logging_file_path,
-                                          "MTE_" + datetime.datetime.now().strftime("%Y%m%d%H%M%S") + '.log')
         config_logger()
 
     @property
@@ -91,10 +88,6 @@ class Config(object):
     def logging_formatter(self, input):
         self._logging_formatter = str(input)
         config_logger()
-
-    @property
-    def logging_file(self):
-        return self._logging_file
 
 
 logger_config = Config()

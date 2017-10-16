@@ -1,7 +1,7 @@
 # coding: utf-8
 
-import requests
-from nose.tools import assert_equal
+from client import HttpSession
+from nose.tools import assert_equal, assert_greater_equal, assert_less_equal
 import json
 import sys
 from logger import logger
@@ -28,6 +28,7 @@ class Field(object):
         self.name = kw.get('name', None)
         self._default = kw.get('default', 'none')
         self.request_type = kw.get('request_type', None)
+        self._max = kw.get('max', None)
 
     @property
     def default(self):
@@ -83,6 +84,11 @@ class ResponseField(Field):
             kw['request_type'] = 'res'
         super(ResponseField, self).__init__(**kw)
 
+    @property
+    def max(self):
+        d = self._max
+        return d() if callable(d) else d
+
 
 class HeadersField(Field):
     def __init__(self, **kw):
@@ -104,6 +110,7 @@ class ModelMetaclass(type):
         response = dict()
         headers = dict()
         path = dict()
+        resptime = dict()
         for k, v in attrs.items():
             # if isinstance(v, Field) -> 待扩展
             if isinstance(v, ParamsField):
@@ -167,9 +174,6 @@ class Model(dict):
                 logger.warning("key {} is not found in field,  maybe wrong input! ".format(ik))
 
         super(Model, self).__init__(**init_kwargs)
-        # if service is None:
-        #     logger.info('No service provided, use ServiceEntity now!')
-        #     service = ServiceEntity()
         self.run(service)
 
     def __getattr__(self, item):
@@ -183,13 +187,6 @@ class Model(dict):
 
     def run(self, service=None):
         request_info = dict()
-        # api
-        hostname = service.hostname
-        if hostname is None:
-            if hasattr(self, '__host__'):
-                hostname = getattr(self, '__host__')
-            else:
-                raise ValueError('No hostname specified!')
         api = getattr(self, '__api__')
         # 如果有path field 替换path中对应的值
         if hasattr(self, '__path__'):
@@ -200,8 +197,7 @@ class Model(dict):
                     if path_old_key not in api:
                         raise ValueError('key: %s is not found in api: %s' % (path_old_key, api))
                     api = api.replace("/" + str(path_old_key), "/" + str(path_new_value), 1)
-        # 获取url
-        request_info['url'] = hostname + api
+
         method = getattr(self, '__method__')
         # data headers 获取request info
         for tr in ['__params__', '__data__', '__json__', '__files__', '__headers__']:
@@ -215,23 +211,12 @@ class Model(dict):
                             info[v.name] = val
                         else:
                             info[k] = val
-
-                            # if v.name:
-                            #     val = getattr(self, k) if hasattr(self, k) else v.default
-                            #     # 外面未传值，而且没有default值，则忽略该入参
-                            #     if val != 'none':
-                            #         info[v.name] = val
-                            # else:
-                            #     val = getattr(self, k) if hasattr(self, k) else v.default
-                            #     # 外面未传值，而且没有default值，则忽略该入参
-                            #     if val != 'none':
-                            #         info[k] = val
                 if tr == '__headers__' and len(info) == 0:
                     pass
                 else:
                     request_info[tr.strip('__')] = info
         # 发送请求
-        service.http_send(method, **request_info)
+        service.http_send(method, api, **request_info)
         if hasattr(self, '__response__'):
             res = getattr(self, '__response__')
             for k, v in res.items():
@@ -240,6 +225,12 @@ class Model(dict):
                     actual = getattr(service, arg_name)
                 except Exception:
                     actual = "No value found in response!"
+                # response_time 验证
+                if v.max:
+                    msg = u"[%s]性能指标: 实际时间: [%sms] 超过最大值: [%dms]" % (api, service.response_time, v.max)
+                    assert_greater_equal(service.response_time, v.max, msg)
+                    assert_less_equal(service.response_time, v.max, msg)
+
                 # 如果有expect不为None，校验response,Get类型不做检验，需要检验可放在脚本当中
                 if method != 'GET':
                     expect = getattr(self, k) if hasattr(self, k) else v.default
@@ -264,7 +255,7 @@ class ServiceEntity(object):
         self._entity_flow_from_har = None
         self.hostname = hostname
         if not session:
-            self.session = requests.session()
+            self.session = HttpSession(base_url=hostname)
         self._headers = None
         self._cookies = None
         self._auth = None
@@ -284,6 +275,10 @@ class ServiceEntity(object):
         return self._response
 
     @property
+    def response_time(self):
+        return self.session.response_time
+
+    @property
     def status_code(self):
         return self._response.status_code
 
@@ -291,7 +286,7 @@ class ServiceEntity(object):
     def json_response(self):
         return self._json_response
 
-    def http_send(self, method, **kw):
+    def http_send(self, method, api, **kw):
         """
         send http request when request data prepared
         :return:
@@ -306,18 +301,21 @@ class ServiceEntity(object):
             else:
                 kw['headers'] = self._headers
 
-        self._response = getattr(self.session, method.lower())(**kw)
+        self._response = self.session.request(method=method.lower(), url=api, **kw)
         try:
             self._json_response = self._response.json()
         except:
             pass
-        logger.info("{method} {url} HTTP/1.1 | {req} |{res}".format(method=method,
-                                                                    url=kw.get('url'),
-                                                                    req=kw.get('data') or kw.get('params') or kw.get(
-                                                                        'files'),
-                                                                    res=json.dumps(self._json_response,
-                                                                                   ensure_ascii=False,
-                                                                                   encoding='utf-8')))
+        logger.info("{method} {url} {response_time}ms HTTP/1.1 | {req} |{res}".format(method=method,
+                                                                                      url=self.hostname + api,
+                                                                                      response_time=self.session.response_time,
+                                                                                      req=kw.get('data') or kw.get(
+                                                                                          'params') or kw.get(
+                                                                                          'files'),
+                                                                                      res=json.dumps(
+                                                                                          self._json_response,
+                                                                                          ensure_ascii=False,
+                                                                                          encoding='utf-8')))
         if self._json_response and self._json_response.has_key('errors') and len(self._json_response['errors']) == 1:
             logger.debug('error message:%s' % self._json_response['errors'][0])
 

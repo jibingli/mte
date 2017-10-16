@@ -1,14 +1,36 @@
 # coding: utf-8
 
-
-
-class AXUI_BaseException(Exception):
+class MyBaseError(BaseException):
     pass
 
 
-class DriverException(AXUI_BaseException):
+class ParamsError(MyBaseError):
     pass
 
 
-class TimeOutError(AXUI_BaseException):
+class ResponseError(MyBaseError):
+    pass
+
+
+class ParseResponseError(MyBaseError):
+    pass
+
+
+class ValidationError(MyBaseError):
+    pass
+
+
+class FunctionNotFound(NameError):
+    pass
+
+
+class VariableNotFound(NameError):
+    pass
+
+
+class ApiNotFound(NameError):
+    pass
+
+
+class SuiteNotFound(NameError):
     pass
