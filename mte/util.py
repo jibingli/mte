@@ -22,14 +22,14 @@ districtcode_path = PATH('./districtcode.txt')
 d = datetime.datetime.now()
 
 
-def get_random_phonenumber(self):
-    logger.debug("Begin to generate phone number...")
+def get_random_phonenumber():
+    logger.info("Begin to generate phone number...")
     number = random.choice(['133', '151', '187', '170']) + "".join(random.choice("0123456789") for i in range(8))
     logger.debug("phone number: %s" % str(number))
     return number
 
 
-def intersection_of_path(self, file_path):
+def intersection_of_path(file_path):
     """
     拼接绝对路径的文件路径,方便文件的读取
     :param file_path: 有单一相交路径的相对路径
@@ -45,7 +45,7 @@ def intersection_of_path(self, file_path):
     return os.path.join(prepose_path, file_path)
 
 
-def _getDistrictCode(self):
+def _getDistrictCode():
     with open(districtcode_path, "rb") as file:
         data = file.read()
 
@@ -67,14 +67,14 @@ def _getDistrictCode(self):
     # 生成身份证号
 
 
-def create_realname_and_id_number(self):
+def create_realname_and_id_number():
     # real_name = random.choice(['Test', 'test', 'user', 'random']) + "".join(
     #     random.choice("0123456789") for i in range(3))
     real_name = random.choice(['赵', '钱', '孙', '李']) + "".join(
         random.choice(['随', '机', '生', '成', '中', '文', '姓', '名']) for i in range(2))
     logger.debug("generate id number:")
     '''生成身份证号'''
-    code_list = self._getDistrictCode()
+    code_list = _getDistrictCode()
     id = code_list[random.randint(0, len(code_list))]['code']  # 地区项
     id = id + str(random.randint(1930, 2013))  # 年份项
     da = date.today() + timedelta(days=random.randint(1, 366))  # 月份和日期项
@@ -93,7 +93,7 @@ def create_realname_and_id_number(self):
     return real_name, id
 
 
-def generate_bank_card_number(self):
+def generate_bank_card_number():
     # 622588： 招商银行借记卡 621226: 工商
     bank_card = random.choice(['62122653']) + "".join(random.choice("0123456789") for i in range(11))
     # bank_card_split = ' '.join([bank_card[i:i + 4] for i in range(0, len(bank_card), 4)])
@@ -101,19 +101,19 @@ def generate_bank_card_number(self):
     return bank_card
 
 
-def now_time(self):
+def now_time():
     now = datetime.datetime.now()
     strdatetime = now.strftime("%Y%m%d%H%M%S")
     return strdatetime
 
 
-def string_to_dict(self, s):
+def string_to_dict(s):
     import ast
     result = ast.literal_eval(s)
     return result
 
 
-def dict_to_string(self, d):
+def dict_to_string(d):
     return json.dumps(d)
 
 

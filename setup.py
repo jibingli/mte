@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding=utf-8
 
-from setuptools import setup
+from setuptools import setup, find_packages
 
 setup(
     name="mte-orm",  # pypi中的名称，pip或者easy_install安装时使用的名称
@@ -11,7 +11,8 @@ setup(
     description=("This is a api test module"),
     license="GPLv3",
     keywords="redis subscripe",
-    packages=['mte'],  # 需要打包的目录列表
+    packages=find_packages(exclude=["*.tests", "*.tests.*", "tests.*", "tests"]),
+    package_data={'mte': ['*.txt'],},
     # 需要安装的依赖
     install_requires=[
         'nose', 'requests', 'sqlalchemy', 'requests_ntlm'

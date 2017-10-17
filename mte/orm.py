@@ -110,7 +110,6 @@ class ModelMetaclass(type):
         response = dict()
         headers = dict()
         path = dict()
-        resptime = dict()
         for k, v in attrs.items():
             # if isinstance(v, Field) -> 待扩展
             if isinstance(v, ParamsField):
@@ -242,7 +241,7 @@ class Model(dict):
                         assert_equal(actual, expect, u"参数: [%s] -> 实际值: [%s] != 期望值: [%s]" % (arg_name, actual, expect))
                     elif k == 'status_code':
                         expect = v.default
-                        assert_equal(actual, expect, "Status code: %s !=  %s" % (actual, expect))
+                        assert_equal(actual, expect, u"参数: [status_code]-> 实际值: [%s] != 期望值: [%s]" % (actual, expect))
 
                 if actual != "No value found in response!":
                     # 检验结束后保存response
