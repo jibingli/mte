@@ -228,7 +228,6 @@ class Model(dict):
                 # response_time 验证
                 if v.max:
                     msg = u"[%s]性能指标: 实际时间: [%sms] 超过最大值: [%dms]" % (api, service.response_time, v.max)
-                    assert_greater_equal(service.response_time, v.max, msg)
                     assert_less_equal(service.response_time, v.max, msg)
 
                 # 如果有expect不为None，校验response,Get类型不做检验，需要检验可放在脚本当中
