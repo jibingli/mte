@@ -233,15 +233,18 @@ class Model(dict):
                 if method != 'GET':
                     expect = getattr(self, k) if hasattr(self, k) else v.default
                     if expect != 'none':
-                        assert_equal(actual, expect, u"参数: [%s]-> 实际值: [%s] != 期望值: [%s]" % (arg_name, actual, expect))
+                        assert_equal(actual, expect,
+                                     u"[%s]参数: [%s]-> 实际值: [%s] != 期望值: [%s]" % (api, arg_name, actual, expect))
                 else:
                     # Get 情况下 如果外部传了期望值则进行验证，未传的话默认验证status code与default比较
                     if hasattr(self, k):
                         expect = getattr(self, k)
-                        assert_equal(actual, expect, u"参数: [%s] -> 实际值: [%s] != 期望值: [%s]" % (arg_name, actual, expect))
+                        assert_equal(actual, expect,
+                                     u"[%s]参数: [%s] -> 实际值: [%s] != 期望值: [%s]" % (api, arg_name, actual, expect))
                     elif k == 'status_code':
                         expect = v.default
-                        assert_equal(actual, expect, u"参数: [status_code]-> 实际值: [%s] != 期望值: [%s]" % (actual, expect))
+                        assert_equal(actual, expect,
+                                     u"[%s]参数: [status_code]-> 实际值: [%s] != 期望值: [%s]" % (api, actual, expect))
 
                 if actual != "No value found in response!":
                     # 检验结束后保存response
@@ -299,7 +302,7 @@ class ServiceEntity(object):
             else:
                 kw['headers'] = self._headers
 
-        self._response = self.session.request(method=method.lower(), url=api, **kw)
+        self._response = self.session.request(method=method.lower(), url=self.hostname + api, **kw)
         try:
             self._json_response = self._response.json()
         except:
@@ -323,8 +326,12 @@ class ServiceEntity(object):
         return self.get_item(attribute, self._json_response)
 
     def get_item(self, attribute, data):
+        if '.' in attribute:
+            split_char = '.'
+        else:
+            split_char = '_'
         try:
-            attr_list = attribute.split('_')
+            attr_list = attribute.split(split_char)
         except ValueError:
             attr_list = [attribute, ]
         result = data
